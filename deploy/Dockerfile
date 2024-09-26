@@ -93,11 +93,11 @@ COPY --from=builder /src/out/warmer /kaniko/warmer
 
 ENTRYPOINT ["/kaniko/warmer"]
 
-FROM kaniko-base AS kaniko-executor
+# FROM kaniko-base AS kaniko-executor
 
-COPY --from=builder /src/out/executor /kaniko/executor
+# COPY --from=builder /src/out/executor /kaniko/executor
 
-ENTRYPOINT ["/kaniko/executor"]
+# ENTRYPOINT ["/kaniko/executor"]
 
 FROM python:3.12-slim AS python-debug
 

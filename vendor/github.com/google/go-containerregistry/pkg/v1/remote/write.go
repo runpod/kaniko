@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -580,6 +581,7 @@ func (w *writer) commitManifest(ctx context.Context, t Taggable, ref name.Refere
 		}
 
 		u := w.url(fmt.Sprintf("/v2/%s/manifests/%s", w.repo.RepositoryStr(), ref.Identifier()))
+		log.Printf("u: %s", u.String())
 
 		// Make the request to PUT the serialized manifest
 		req, err := http.NewRequest(http.MethodPut, u.String(), bytes.NewBuffer(raw))

@@ -25,7 +25,7 @@ GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 ORG := github.com/GoogleContainerTools
 PROJECT := kaniko
-REGISTRY?=gcr.io/kaniko-project
+REGISTRY?=public.ecr.aws/j9g7b3p3/rpkaniko
 
 REPOPATH ?= $(ORG)/$(PROJECT)
 VERSION_PACKAGE = $(REPOPATH)/pkg/version
@@ -111,3 +111,9 @@ push:
 	docker push $(REGISTRY)/executor:debug
 	docker push $(REGISTRY)/executor:slim
 	docker push $(REGISTRY)/warmer:latest
+
+.PHONY: images
+images-latest: DOCKER_BUILDKIT=1
+images-latest:
+	docker build ${BUILD_ARG} --build-arg=TARGETARCH=$(GOARCH) --build-arg=TARGETOS=linux -t $(REGISTRY)/executor:latest -f deploy/Dockerfile --target kaniko-executor .
+	docker push $(REGISTRY)/executor:latest

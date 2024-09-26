@@ -87,11 +87,11 @@ WORKDIR /workspace
 
 ### FINAL STAGES ###
 
-FROM kaniko-base AS kaniko-warmer
+# FROM kaniko-base AS kaniko-warmer
 
-COPY --from=builder /src/out/warmer /kaniko/warmer
+# COPY --from=builder /src/out/warmer /kaniko/warmer
 
-ENTRYPOINT ["/kaniko/warmer"]
+# ENTRYPOINT ["/kaniko/warmer"]
 
 # FROM kaniko-base AS kaniko-executor
 
@@ -109,21 +109,21 @@ RUN pip install -r /kaniko/requirements.txt
 
 ENTRYPOINT ["python3", "/kaniko/handler.py"]
 
-FROM kaniko-executor AS kaniko-debug
+# FROM kaniko-executor AS kaniko-debug
 
-ENV PATH /usr/local/bin:/kaniko:/busybox
+# ENV PATH /usr/local/bin:/kaniko:/busybox
 
-COPY --from=builder /src/out/warmer /kaniko/warmer
+# COPY --from=builder /src/out/warmer /kaniko/warmer
 
-COPY --from=busybox /bin /busybox
-# Declare /busybox as a volume to get it automatically in the path to ignore
-VOLUME /busybox
+# COPY --from=busybox /bin /busybox
+# # Declare /busybox as a volume to get it automatically in the path to ignore
+# VOLUME /busybox
 
-RUN ["/busybox/mkdir", "-p", "/bin"]
-RUN ["/busybox/ln", "-s", "/busybox/sh", "/bin/sh"]
+# RUN ["/busybox/mkdir", "-p", "/bin"]
+# RUN ["/busybox/ln", "-s", "/busybox/sh", "/bin/sh"]
 
-FROM kaniko-base-slim AS kaniko-slim
+# FROM kaniko-base-slim AS kaniko-slim
 
-COPY --from=builder /src/out/executor /kaniko/executor
+# COPY --from=builder /src/out/executor /kaniko/executor
 
-ENTRYPOINT ["/kaniko/executor"]
+# ENTRYPOINT ["/kaniko/executor"]

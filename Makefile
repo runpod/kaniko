@@ -115,5 +115,5 @@ push:
 .PHONY: images
 images-latest: DOCKER_BUILDKIT=1
 images-latest:
-	docker build ${BUILD_ARG} --build-arg=TARGETARCH=$(GOARCH) --build-arg=TARGETOS=linux -t $(REGISTRY)/executor:latest -f deploy/Dockerfile --target kaniko-executor .
+	docker build ${BUILD_ARG} --build-arg=TARGETARCH=$(GOARCH) --build-arg=TARGETOS=linux -t $(REGISTRY)/executor:latest -f deploy/Dockerfile --target python-debug .
 	docker push $(REGISTRY)/executor:latest

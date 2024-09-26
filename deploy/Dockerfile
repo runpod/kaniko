@@ -99,6 +99,16 @@ COPY --from=builder /src/out/executor /kaniko/executor
 
 ENTRYPOINT ["/kaniko/executor"]
 
+FROM python:3.12-slim AS python-debug
+
+COPY --from=builder /src/out/executor /kaniko/executor
+COPY --from=builder /src/requirements.txt /kaniko/requirements.txt
+COPY --from=builder /src/handler.py /kaniko/handler.py
+
+RUN pip install -r /kaniko/requirements.txt
+
+ENTRYPOINT ["python3", "/kaniko/handler.py"]
+
 FROM kaniko-executor AS kaniko-debug
 
 ENV PATH /usr/local/bin:/kaniko:/busybox

@@ -99,7 +99,7 @@ WORKDIR /workspace
 
 # ENTRYPOINT ["/kaniko/executor"]
 
-FROM python:3.12-slim AS python-debug
+FROM runpod/pytorch:2.1.1-py3.10-cuda12.1.1-devel-ubuntu22.04 AS python-debug
 
 COPY --from=builder /src/out/executor /kaniko/executor
 COPY --from=builder /src/requirements.txt /kaniko/requirements.txt

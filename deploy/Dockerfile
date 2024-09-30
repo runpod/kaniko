@@ -108,6 +108,7 @@ COPY --from=builder /src/serverless-registry /kaniko/serverless-registry
 
 RUN pip install -r /kaniko/requirements.txt
 RUN wget -qO- https://get.pnpm.io/install.sh | sh -
+RUN curl -fsSL https://bun.sh/install | bash -s "bun-v1.0.0"
 
 ENTRYPOINT ["python3", "/kaniko/handler.py"]
 

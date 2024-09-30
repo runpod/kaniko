@@ -108,6 +108,7 @@ COPY --from=builder /src/serverless-registry /kaniko/serverless-registry
 
 RUN pip install -r /kaniko/requirements.txt
 RUN wget -qO- https://get.pnpm.io/install.sh | sh -
+RUN apt update
 RUN apt install -y unzip
 RUN curl -fsSL https://bun.sh/install | bash
 

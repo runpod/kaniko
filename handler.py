@@ -7,7 +7,7 @@ def build_image(job):
     dockerfile_path = job_input["dockerfile_path"]
     destination = job_input["destination"]
 
-    subprocess.run(["mv", "-p", "/kaniko", "/runpod-volume/kaniko"])
+    subprocess.run(["mv", "/kaniko", "/runpod-volume/kaniko"])
     subprocess.run(["/runpod-volume/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
     subprocess.run(["bun", "install"], cwd="/runpod-volume/kaniko/serverless-registry/push")
     subprocess.run(["TAR_PATH=/runpod-volume/image.tar", "echo", "Innovator81@", "|", "USERNAME_REGISTRY=pierre", "bun", "run", "index.ts", "r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"], cwd="/runpod-volume/kaniko/serverless-registry/push")

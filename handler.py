@@ -9,10 +9,10 @@ def build_image(job):
     
     subprocess.run("curl -fsSL https://bun.sh/install | bash", shell=True)
     subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
-    subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", shell=True)
+    subprocess.run("source /root/.bashrc && bun install", cwd="/kaniko/serverless-registry/push", shell=True)
 
     envs = { "USERNAME_REGISTRY": "pierre-bastola", "TAR_PATH": "/runpod-volume/image.tar" }
-    subprocess.run("echo Innovator81@ | bun run index.ts r2-registry-production.pierre-bastola.workers.dev/runpod8:latest", cwd="/kaniko/serverless-registry/push", shell=True, env=envs)
+    subprocess.run("echo Innovator81@ | source /root/.bashrc && bun run index.ts r2-registry-production.pierre-bastola.workers.dev/runpod8:latest", cwd="/kaniko/serverless-registry/push", shell=True, env=envs)
 
     return True
 

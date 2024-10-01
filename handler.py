@@ -7,6 +7,7 @@ def build_image(job):
     context = job_input["context"]
     dockerfile_path = job_input["dockerfile_path"]
     destination = job_input["destination"]
+    cloudflare_destination = job_input["cloudflare_destination"]
     uuid = job_input["uuid"]
 
     envs = os.environ.copy()
@@ -22,7 +23,7 @@ def build_image(job):
     envs["UUID"] = uuid
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
     subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
-    run_command = "echo Innovator81@ | USERNAME_REGISTRY=pierre bun run index.ts r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"
+    run_command = "echo Innovator81@ | USERNAME_REGISTRY=pierre bun run index.ts {}".format(cloudflare_destination)
     subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
 
     return True

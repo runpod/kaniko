@@ -7,7 +7,7 @@ def build_image(job):
     dockerfile_path = job_input["dockerfile_path"]
     destination = job_input["destination"]
     
-    subprocess.run(["curl", "-fsSL", "https://bun.sh/install", "|", "bash"])
+    subprocess.run("curl -fsSL https://bun.sh/install | bash", shell=True)
     subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
     subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", shell=True)
 

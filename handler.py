@@ -19,7 +19,7 @@ def build_image(job):
 
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
     tarPath = "/runpod-volume/{uuid}/image.tar".format(uuid=uuid)
-    subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath={}".format(tarPath)])
+    subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--tarPath={}".format(tarPath)])
     envs["USERNAME_REGISTRY"] = "pierre-bastola"
     envs["TAR_PATH"] = tarPath
     envs["UUID"] = uuid

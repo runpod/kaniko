@@ -9,18 +9,12 @@ def build_image(job):
     
     subprocess.run(["curl", "-fsSL", "https://bun.sh/install", "|", "bash"])
     subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
-    subprocess.run(["bun", "install"], cwd="/kaniko/serverless-registry/push")
-    subprocess.run(["TAR_PATH=/runpod-volume/image.tar", "echo", "Innovator81@", "|", "USERNAME_REGISTRY=pierre", "bun", "run", "index.ts", "r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"], cwd="/kaniko/serverless-registry/push")
+    subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", shell=True)
+
+    envs = { "USERNAME_REGISTRY": "pierre-bastola", "TAR_PATH": "/runpod-volume/image.tar" }
+    subprocess.run("echo Innovator81@ | bun run index.ts r2-registry-production.pierre-bastola.workers.dev/runpod8:latest", cwd="/kaniko/serverless-registry/push", shell=True, env=envs)
 
     return True
 
-    # subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
-    # subprocess.run(["bun", "install"], cwd="serverless-registry/push")
-    # subprocess.run(["TAR_PATH=/runpod-volume/image.tar", "echo", "Innovator81@", "|", "USERNAME_REGISTRY=pierre", "bun", "run", "index.ts", "r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"], cwd="serverless-registry/push")
-
-
-    # subprocess.run(["/runpod-volume/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
-    # subprocess.run(["bun", "install"], cwd="/runpod-volume/kaniko/serverless-registry/push")
-    # subprocess.run(["TAR_PATH=/runpod-volume/image.tar", "echo", "Innovator81@", "|", "USERNAME_REGISTRY=pierre", "bun", "run", "index.ts", "r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"], cwd="/runpod-volume/kaniko/serverless-registry/push")
 
 runpod.serverless.start({"handler": build_image})

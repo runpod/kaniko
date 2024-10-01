@@ -17,11 +17,13 @@ def build_image(job):
     bun_bin_dir = os.path.expanduser("~/.bun/bin")
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
 
-    subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
-    envs["USERNAME_REGISTRY"] = "pierre-bastola"
-    envs["TAR_PATH"] = "/runpod-volume/image.tar"
-    envs["UUID"] = uuid
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
+    tarPath = "/runpod-volume/{uuid}/image.tar"
+    subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath={}".format(tarPath)])
+    envs["USERNAME_REGISTRY"] = "pierre-bastola"
+    envs["TAR_PATH"] = tarPath
+    envs["UUID"] = uuid
+    
     subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
     run_command = "echo Innovator81@ | USERNAME_REGISTRY=pierre bun run index.ts {}".format(cloudflare_destination)
     subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")

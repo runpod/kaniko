@@ -7,6 +7,7 @@ def build_image(job):
     context = job_input["context"]
     dockerfile_path = job_input["dockerfile_path"]
     destination = job_input["destination"]
+    uuid = job_input["uuid"]
 
     envs = os.environ.copy()
     install_command = "curl -fsSL https://bun.sh/install | bash"
@@ -18,6 +19,7 @@ def build_image(job):
     subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath=/runpod-volume/image.tar"])
     envs["USERNAME_REGISTRY"] = "pierre-bastola"
     envs["TAR_PATH"] = "/runpod-volume/image.tar"
+    envs["UUID"] = uuid
 
     subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
     run_command = "echo Innovator81@ | bun run index.ts r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"

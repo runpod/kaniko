@@ -18,7 +18,7 @@ def build_image(job):
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
 
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
-    tarPath = "/runpod-volume/{uuid}/image.tar.gz".format(uuid=uuid)
+    tarPath = "/runpod-volume/{uuid}/image.tar".format(uuid=uuid)
     subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tarPath={}".format(tarPath)])
     envs["USERNAME_REGISTRY"] = "pierre-bastola"
     envs["TAR_PATH"] = tarPath

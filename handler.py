@@ -22,7 +22,7 @@ def build_image(job):
     envs["UUID"] = uuid
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
     subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
-    run_command = "echo Innovator81@ | bun run index.ts r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"
+    run_command = "echo Innovator81@ | USERNAME_REGISTRY=pierre-bastola bun run index.ts r2-registry-production.pierre-bastola.workers.dev/runpod8:latest"
     subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
 
     return True

@@ -1,14 +1,22 @@
 import runpod
 import subprocess
 import os
+import shutil
+import tarfile
 
 def build_image(job):
+    # inputs
     job_input = job["input"]
-    context = job_input["context"]
     dockerfile_path = job_input["dockerfile_path"]
-    destination = job_input["destination"]
     cloudflare_destination = job_input["cloudflare_destination"]
     uuid = job_input["uuid"]
+    git_repository = job_input["git_repository"]
+
+    repo_dir = f"/runpod-volume/{uuid}/repo"
+    clone_command = f"git clone {git_repository} {repo_dir}"
+    subprocess.run(clone_command, shell=True, check=True)
+    
+    build_context = f"dir:///{repo_dir}"
 
     envs = os.environ.copy()
     install_command = "curl -fsSL https://bun.sh/install | bash"
@@ -19,7 +27,7 @@ def build_image(job):
 
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
     tarPath = "/runpod-volume/{uuid}/image.tar".format(uuid=uuid)
-    subprocess.run(["/kaniko/executor", "--context={}".format(context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format(destination), "--no-push", "--tar-path={}".format(tarPath)])
+    subprocess.run(["/kaniko/executor", "--context={}".format(build_context), "--dockerfile={}".format(dockerfile_path), "--destination={}".format("this-is-not-necessary:latest"), "--no-push", "--tar-path={}".format(tarPath)])
     envs["USERNAME_REGISTRY"] = "pierre-bastola"
     envs["TAR_PATH"] = tarPath
     envs["UUID"] = uuid

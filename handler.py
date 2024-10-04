@@ -16,17 +16,15 @@ def build_image(job):
     bun_bin_dir = os.path.expanduser("~/.bun/bin")
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
 
-    
+    repoDir = "/runpod-volume/{}/repo".format(uuid)
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
 
-    contextPath = "/runpod-volume/{}/repo.tar.gz".format(uuid)
-    subprocess.run("git clone {} /runpod-volume/{}/repo".format(github_repo, uuid), shell=True)
-    subprocess.run("tar -czvf {} /runpod-volume/{}/repo".format(contextPath, uuid), shell=True)
+    subprocess.run("git clone {} {}".format(github_repo, repoDir), shell=True)
 
     imageBuildPath = "/runpod-volume/{}/image.tar".format(uuid)
     subprocess.run([
         "/kaniko/executor", 
-        "--context={}".format("dir://{}".format(contextPath)), 
+        "--context={}".format("dir://{}".format(repoDir)), 
         "--dockerfile={}".format(dockerfile_path), 
         "--destination={}".format(cloudflare_destination), 
         "--no-push", "--tar-path={}".format(imageBuildPath)]

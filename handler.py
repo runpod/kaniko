@@ -26,7 +26,7 @@ def build_image(job):
     imageBuildPath = "/runpod-volume/{}/image.tar".format(uuid)
     subprocess.run([
         "/kaniko/executor", 
-        "--context={}".format(contextPath), 
+        "--context={}".format("dir://{}".format(contextPath)), 
         "--dockerfile={}".format(dockerfile_path), 
         "--destination={}".format(cloudflare_destination), 
         "--no-push", "--tar-path={}".format(imageBuildPath)]

@@ -42,8 +42,6 @@ def build_image(job):
     repoDir = "/runpod-volume/{}/temp/{}".format(uuid, extracted_dir)
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
 
-    subprocess.run("git clone {} {}".format(github_repo, repoDir), shell=True)
-
     imageBuildPath = "/runpod-volume/{}/image.tar".format(uuid)
     subprocess.run([
         "/kaniko/executor", 

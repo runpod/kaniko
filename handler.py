@@ -1,22 +1,45 @@
 import runpod
 import subprocess
 import os
+import requests
+import tarfile
+import io
 
 def build_image(job):
     job_input = job["input"]
     dockerfile_path = job_input["dockerfile_path"]
     uuid = job_input["uuid"]
     cloudflare_destination = job_input["cloudflare_destination"]
-    github_repo = job_input["github_repo"]    
+    github_repo = job_input["github_repo"] 
+    auth_token = job_input["auth_token"]
+    ref = job_input["ref"]
 
     envs = os.environ.copy()
+
+    api_url = f"https://api.github.com/repos/{github_repo.split('/')[-2]}/{github_repo.split('/')[-1]}/tarball/{ref}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {auth_token}",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+    response = requests.get(api_url, headers=headers, stream=True)
+    response.raise_for_status()
+
+    temp_dir = f"/runpod-volume/{uuid}/temp"
+    os.makedirs(temp_dir, exist_ok=True)
+
+    with tarfile.open(fileobj=io.BytesIO(response.content), mode="r:gz") as tar:
+        tar.extractall(path=temp_dir)
+
+    extracted_dir = next(os.walk(temp_dir))[1][0]
     install_command = "curl -fsSL https://bun.sh/install | bash"
     subprocess.run(install_command, shell=True, executable="/bin/bash", env=envs)
 
     bun_bin_dir = os.path.expanduser("~/.bun/bin")
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
 
-    repoDir = "/runpod-volume/{}/repo".format(uuid)
+    repoDir = "/runpod-volume/{}/temp/{}".format(uuid, extracted_dir)
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
 
     subprocess.run("git clone {} {}".format(github_repo, repoDir), shell=True)

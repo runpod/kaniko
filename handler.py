@@ -1,3 +1,4 @@
+import shutil
 import runpod
 import subprocess
 import os
@@ -60,7 +61,17 @@ def build_image(job):
     subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
     run_command = "bun run index.ts {}".format(cloudflare_destination)
     subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
-    
+
+    # cleanup
+    necessary_files = ["Dockerfile", "executor", "handler.py", "requirements.txt", "serverless-registry"]
+    for file in os.listdir("/kaniko"):
+        if file not in necessary_files:
+            file_path = os.path.join("/kaniko", file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+
     return True
 
 runpod.serverless.start({"handler": build_image})

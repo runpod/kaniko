@@ -44,6 +44,7 @@ def build_image(job):
 
     repoDir = "/runpod-volume/{}/temp/{}".format(uuid, extracted_dir)
     subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
+    subprocess.run("mkdir -p /runpod-volume/{}/cache".format(uuid), shell=True, env=envs)
 
     imageBuildPath = "/runpod-volume/{}/image.tar".format(uuid)
     subprocess.run([
@@ -51,6 +52,8 @@ def build_image(job):
         "--context={}".format("dir://{}".format(repoDir)), 
         "--dockerfile={}".format(dockerfile_path), 
         "--destination={}".format(cloudflare_destination), 
+        "--cache=true",
+        "--cache-dir={}".format(f"/runpod-volume/{uuid}/cache"),
         "--no-push", "--tar-path={}".format(imageBuildPath)]
     )
     envs["USERNAME_REGISTRY"] = username_registry

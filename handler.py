@@ -13,6 +13,8 @@ def build_image(job):
     github_repo = job_input["github_repo"] 
     auth_token = job_input["auth_token"]
     ref = job_input["ref"]
+    jwt_token = job_input["jwt_token"]
+    username_registry = job_input["username_registry"]
 
     envs = os.environ.copy()
 
@@ -48,14 +50,16 @@ def build_image(job):
         "--context={}".format("dir://{}".format(repoDir)), 
         "--dockerfile={}".format(dockerfile_path), 
         "--destination={}".format(cloudflare_destination), 
+        "--cleanup",
         "--no-push", "--tar-path={}".format(imageBuildPath)]
     )
-    envs["USERNAME_REGISTRY"] = "pierre-bastola"
+    envs["USERNAME_REGISTRY"] = username_registry
     envs["TAR_PATH"] = imageBuildPath
     envs["UUID"] = uuid
+    envs["REGISTRY_JWT_TOKEN"] = jwt_token
     
     subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
-    run_command = "echo Innovator81@ | USERNAME_REGISTRY=pierre bun run index.ts {}".format(cloudflare_destination)
+    run_command = "bun run index.ts {}".format(cloudflare_destination)
     subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
     
     return True

@@ -62,8 +62,8 @@ def build_image(job):
             "--context={}".format("dir://{}".format(repoDir)), 
             "--dockerfile={}".format(dockerfile_path), 
             "--destination={}".format(cloudflare_destination), 
-            "--cache=true",
-            "--cache-dir={}".format(f"/runpod-volume/{uuid}/cache"),
+            # "--cache=true",
+            # "--cache-dir={}".format(f"/runpod-volume/{uuid}/cache"),
             "--no-push", "--tar-path={}".format(imageBuildPath)
         ], check=True, env=envs)
     except Exception as e:

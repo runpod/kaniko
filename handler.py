@@ -8,7 +8,7 @@ import io
 def build_image(job):
     job_input = job["input"]
     dockerfile_path = job_input["dockerfile_path"]
-    uuid = job_input["uuid"]
+    build_id = job_input["build_id"]
     cloudflare_destination = job_input["cloudflare_destination"]
     github_repo = job_input["github_repo"] 
     auth_token = job_input["auth_token"]
@@ -28,9 +28,9 @@ def build_image(job):
         response = requests.get(api_url, headers=headers, stream=True)
         response.raise_for_status()
     except Exception as e:
-        return { "status": "failed", "error": str(e), "refresh_worker": True }
+        return { "status": "failed", "error": str(e), "refresh_worker": True, "build_id": build_id }
 
-    temp_dir = f"/runpod-volume/{uuid}/temp"
+    temp_dir = f"/runpod-volume/{build_id}/temp"
     os.makedirs(temp_dir, exist_ok=True)
     with tarfile.open(fileobj=io.BytesIO(response.content), mode="r:gz") as tar:
         tar.extractall(path=temp_dir)
@@ -40,22 +40,22 @@ def build_image(job):
     try:
         subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, env=envs)
     except Exception as e:
-        return { "status": "failed", "error": str(e), "refresh_worker": True }
+        return { "status": "failed", "error": str(e), "refresh_worker": True, "build_id": build_id }
 
     bun_bin_dir = os.path.expanduser("~/.bun/bin")
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
-    repoDir = "/runpod-volume/{}/temp/{}".format(uuid, extracted_dir)
+    repoDir = "/runpod-volume/{}/temp/{}".format(build_id, extracted_dir)
     try:
-        subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs, check=True)
+        subprocess.run("mkdir -p /runpod-volume/{}".format(build_id), shell=True, env=envs, check=True)
     except Exception as e:
-        return { "status": "failed", "error": str(e), "refresh_worker": True }
+        return { "status": "failed", "error": str(e), "refresh_worker": True, "build_id": build_id }
     
     try:
-        subprocess.run("mkdir -p /runpod-volume/{}/cache".format(uuid), shell=True, env=envs, check=True)
+        subprocess.run("mkdir -p /runpod-volume/{}/cache".format(build_id), shell=True, env=envs, check=True)
     except Exception as e:
-        return { "status": "failed", "error": str(e), "refresh_worker": True }
+        return { "status": "failed", "error": str(e), "refresh_worker": True, "build_id": build_id }
 
-    imageBuildPath = "/runpod-volume/{}/image.tar".format(uuid)
+    imageBuildPath = "/runpod-volume/{}/image.tar".format(build_id)
     try:
         subprocess.run([
             "/kaniko/executor", 
@@ -63,27 +63,27 @@ def build_image(job):
             "--dockerfile={}".format(dockerfile_path), 
             "--destination={}".format(cloudflare_destination), 
             # "--cache=true",
-            # "--cache-dir={}".format(f"/runpod-volume/{uuid}/cache"),
+            # "--cache-dir={}".format(f"/runpod-volume/{build_id}/cache"),
             "--no-push", "--tar-path={}".format(imageBuildPath)
         ], check=True, env=envs)
     except Exception as e:
-        return { "status": "failed", "error": str(e), "refresh_worker": True }
+        return { "status": "failed", "error": str(e), "refresh_worker": True, "build_id": build_id }
     
     envs["USERNAME_REGISTRY"] = username_registry
     envs["TAR_PATH"] = imageBuildPath
-    envs["UUID"] = uuid
+    envs["build_id"] = build_id
     envs["REGISTRY_JWT_TOKEN"] = jwt_token
     try:
         subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
     except Exception as e:
-        return { "status": "failed", "error": str(e), "refresh_worker": True }
+        return { "status": "failed", "error": str(e), "refresh_worker": True, "build_id": build_id }
 
     run_command = "bun run index.ts {}".format(cloudflare_destination)
     try:
         subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, check=True, executable="/bin/bash")
     except Exception as e:
-        return { "status": "failed", "error": str(e), "refresh_worker": True }
+        return { "status": "failed", "error": str(e), "refresh_worker": True, "build_id": build_id }
 
-    return { "status": "succeeded", "refresh_worker": True }
+    return { "status": "succeeded", "refresh_worker": True, "build_id": build_id }
 
 runpod.serverless.start({"handler": build_image})

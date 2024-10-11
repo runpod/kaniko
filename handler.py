@@ -1,4 +1,3 @@
-import shutil
 import runpod
 import subprocess
 import os
@@ -18,6 +17,10 @@ def build_image(job):
     username_registry = job_input["username_registry"]
 
     envs = os.environ.copy()
+    envs["USERNAME_REGISTRY"] = username_registry
+    envs["TAR_PATH"] = imageBuildPath
+    envs["UUID"] = uuid
+    envs["REGISTRY_JWT_TOKEN"] = jwt_token
 
     api_url = f"https://api.github.com/repos/{github_repo.split('/')[-2]}/{github_repo.split('/')[-1]}/tarball/{ref}"
     headers = {
@@ -26,8 +29,11 @@ def build_image(job):
         "X-GitHub-Api-Version": "2022-11-28"
     }
 
-    response = requests.get(api_url, headers=headers, stream=True)
-    response.raise_for_status()
+    try:
+        response = requests.get(api_url, headers=headers, stream=True)
+        response.raise_for_status()
+    except Exception as e:
+        return { "status": "failed", "error": str(e), "refresh_worker": True }
 
     temp_dir = f"/runpod-volume/{uuid}/temp"
     os.makedirs(temp_dir, exist_ok=True)
@@ -37,44 +43,50 @@ def build_image(job):
 
     extracted_dir = next(os.walk(temp_dir))[1][0]
     install_command = "curl -fsSL https://bun.sh/install | bash"
-    subprocess.run(install_command, shell=True, executable="/bin/bash", env=envs)
+    try:
+        subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, env=envs)
+    except Exception as e:
+        return { "status": "failed", "error": str(e), "refresh_worker": True }
 
     bun_bin_dir = os.path.expanduser("~/.bun/bin")
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
 
     repoDir = "/runpod-volume/{}/temp/{}".format(uuid, extracted_dir)
-    subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs)
-    subprocess.run("mkdir -p /runpod-volume/{}/cache".format(uuid), shell=True, env=envs)
+    try:
+        subprocess.run("mkdir -p /runpod-volume/{}".format(uuid), shell=True, env=envs, check=True)
+    except Exception as e:
+        return { "status": "failed", "error": str(e), "refresh_worker": True }
+    
+    try:
+        subprocess.run("mkdir -p /runpod-volume/{}/cache".format(uuid), shell=True, env=envs, check=True)
+    except Exception as e:
+        return { "status": "failed", "error": str(e), "refresh_worker": True }
 
     imageBuildPath = "/runpod-volume/{}/image.tar".format(uuid)
-    subprocess.run([
-        "/kaniko/executor", 
-        "--context={}".format("dir://{}".format(repoDir)), 
-        "--dockerfile={}".format(dockerfile_path), 
-        "--destination={}".format(cloudflare_destination), 
-        "--cache=true",
-        "--cache-dir={}".format(f"/runpod-volume/{uuid}/cache"),
-        "--no-push", "--tar-path={}".format(imageBuildPath)]
-    )
-    envs["USERNAME_REGISTRY"] = username_registry
-    envs["TAR_PATH"] = imageBuildPath
-    envs["UUID"] = uuid
-    envs["REGISTRY_JWT_TOKEN"] = jwt_token
+    try:
+        subprocess.run([
+            "/kaniko/executor", 
+            "--context={}".format("dir://{}".format(repoDir)), 
+            "--dockerfile={}".format(dockerfile_path), 
+            "--destination={}".format(cloudflare_destination), 
+            "--cache=true",
+            "--cache-dir={}".format(f"/runpod-volume/{uuid}/cache"),
+            "--no-push", "--tar-path={}".format(imageBuildPath)
+        ], check=True, env=envs)
+    except Exception as e:
+        return { "status": "failed", "error": str(e), "refresh_worker": True }
     
-    subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
+    try:
+        subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
+    except Exception as e:
+        return { "status": "failed", "error": str(e), "refresh_worker": True }
+
     run_command = "bun run index.ts {}".format(cloudflare_destination)
-    subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
+    try:
+        subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, check=True, executable="/bin/bash")
+    except Exception as e:
+        return { "status": "failed", "error": str(e), "refresh_worker": True }
 
-    # cleanup
-    necessary_files = ["Dockerfile", "executor", "handler.py", "requirements.txt", "serverless-registry"]
-    for file in os.listdir("/kaniko"):
-        if file not in necessary_files:
-            file_path = os.path.join("/kaniko", file)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-
-    return True
+    return { "status": "succeeded", "refresh_worker": True }
 
 runpod.serverless.start({"handler": build_image})

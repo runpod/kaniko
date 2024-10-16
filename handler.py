@@ -10,7 +10,8 @@ def build_image(job):
     dockerfile_path = job_input["dockerfile_path"]
     build_id = job_input["build_id"]
     cloudflare_destination = job_input["cloudflare_destination"]
-    github_repo = job_input["github_repo"] 
+    github_repo = job_input["github_repo"]
+    github_repo = github_repo.replace(".git", "")
     auth_token = job_input["auth_token"]
     ref = job_input["ref"]
     jwt_token = job_input["jwt_token"]

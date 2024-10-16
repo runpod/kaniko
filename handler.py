@@ -24,6 +24,7 @@ def build_image(job):
         "refresh_worker": refresh_worker_flag,
         "token": jwt_token,
         "status": "succeeded",
+        "build_id": build_id
     }
 
     envs = os.environ.copy()
@@ -36,7 +37,6 @@ def build_image(job):
     }
     try:
         response = requests.get(api_url, headers=headers, stream=True)
-        response.raise_for_status()
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error"] = str(e)
@@ -47,9 +47,9 @@ def build_image(job):
     with tarfile.open(fileobj=io.BytesIO(response.content), mode="r:gz") as tar:
         tar.extractall(path=temp_dir)
 
-    extracted_dir = next(os.walk(temp_dir))[1][0]
-    install_command = "curl -fsSL https://bun.sh/install | bash"
     try:
+        extracted_dir = next(os.walk(temp_dir))[1][0]
+        install_command = "curl -fsSL https://bun.sh/install | bash"
         subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, env=envs)
     except Exception as e:
         return_payload["status"] = "failed"

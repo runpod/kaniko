@@ -25,7 +25,8 @@ def build_image(job):
         "refresh_worker": refresh_worker_flag,
         "token": jwt_token,
         "status": "succeeded",
-        "build_id": build_id
+        "build_id": build_id,
+        "image_name": cloudflare_destination
     }
 
     envs = os.environ.copy()

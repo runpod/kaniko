@@ -108,6 +108,13 @@ def build_image(job):
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
         return return_payload
+    
+    try:
+        subprocess.run("rm -rf /runpod-volume/{}".format(build_id), shell=True, env=envs, check=True)
+    except Exception as e:
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e)
+        return return_payload
 
     return return_payload
 

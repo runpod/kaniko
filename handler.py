@@ -93,7 +93,7 @@ def build_image(job):
     
     envs["USERNAME_REGISTRY"] = username_registry
     envs["TAR_PATH"] = imageBuildPath
-    envs["build_id"] = build_id
+    envs["UUID"] = build_id
     envs["REGISTRY_JWT_TOKEN"] = jwt_token
     try:
         subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")

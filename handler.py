@@ -107,11 +107,12 @@ def build_image(job):
             # "--cache-dir={}".format(f"/runpod-volume/{build_id}/cache"),
             "--single-snapshot",
             "--no-push", "--tar-path={}".format(imageBuildPath)
-        ], check=True, shell=True, executable="/bin/bash", capture_output=True, env=envs)
+        ], check=True, capture_output=True, env=envs)
     except subprocess.CalledProcessError as e:
         error_msg = str(e.stderr)
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e) + error_msg
+        logging.error(f"Error building image: {str(e)} {error_msg}")
         return return_payload
     except Exception as e:
         logging.error(f"Error building image: {str(e)}")

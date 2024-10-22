@@ -24,7 +24,7 @@ impossible_workdirs = [
     "/root", "/", "/runpod-volume", "/lib", 
     "/opt", "/run", "/sbin", "/sys", "/var", 
     "/bin", "/dev", "/home", "/lib32", "/media", 
-    "/proc", "/srv", "/tmp", "/workspace", "/boot", 
+    "/proc", "/srv", "/tmp", "/boot", 
     "/etc", "/kaniko", "/lib64", "/mnt"]
 
 def build_image(job):

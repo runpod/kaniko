@@ -52,7 +52,7 @@ def build_image(job):
             tar.extractall(path=temp_dir)
         extracted_dir = next(os.walk(temp_dir))[1][0]
         install_command = "curl -fsSL https://bun.sh/install | bash"
-        subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, env=envs)
+        result = subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, capture_output=True, env=envs)
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
@@ -86,7 +86,12 @@ def build_image(job):
             # "--cache-dir={}".format(f"/runpod-volume/{build_id}/cache"),
             "--single-snapshot",
             "--no-push", "--tar-path={}".format(imageBuildPath)
-        ], check=True, env=envs)
+        ], check=True, capture_output=True, env=envs)
+    except subprocess.CalledProcessError as e:
+        error_msg = str(e.stderr)
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e) + error_msg
+        return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)

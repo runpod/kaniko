@@ -56,6 +56,11 @@ def build_image(job):
         extracted_dir = next(os.walk(temp_dir))[1][0]
         install_command = "curl -fsSL https://bun.sh/install | bash"
         subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, capture_output=True, env=envs)
+    except subprocess.CalledProcessError as e:
+        error_msg = str(e.stderr)
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e) + error_msg
+        return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
@@ -67,6 +72,11 @@ def build_image(job):
     repoDir = "/runpod-volume/{}/temp/{}".format(build_id, extracted_dir)
     try:
         subprocess.run("mkdir -p /runpod-volume/{}".format(build_id), shell=True, env=envs, check=True)
+    except subprocess.CalledProcessError as e:
+        error_msg = str(e.stderr)
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e) + error_msg
+        return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
@@ -75,6 +85,11 @@ def build_image(job):
     logging.info("Creating cache directory")
     try:
         subprocess.run("mkdir -p /runpod-volume/{}/cache".format(build_id), shell=True, env=envs, check=True)
+    except subprocess.CalledProcessError as e:
+        error_msg = str(e.stderr)
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e) + error_msg
+        return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
@@ -110,6 +125,11 @@ def build_image(job):
     envs["REGISTRY_JWT_TOKEN"] = jwt_token
     try:
         subprocess.run("bun install", cwd="/kaniko/serverless-registry/push", env=envs, shell=True, executable="/bin/bash")
+    except subprocess.CalledProcessError as e:
+        error_msg = str(e.stderr)
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e) + error_msg
+        return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
@@ -119,6 +139,11 @@ def build_image(job):
     run_command = "bun run index.ts {}".format(cloudflare_destination)
     try:
         subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, check=True, executable="/bin/bash")
+    except subprocess.CalledProcessError as e:
+        error_msg = str(e.stderr)
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e) + error_msg
+        return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
@@ -127,6 +152,11 @@ def build_image(job):
     logging.info(f"Cleaning up")
     try:
         subprocess.run("rm -rf /runpod-volume/{}".format(build_id), shell=True, env=envs, check=True)
+    except subprocess.CalledProcessError as e:
+        error_msg = str(e.stderr)
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e) + error_msg
+        return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)

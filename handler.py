@@ -6,6 +6,27 @@ import tarfile
 import io
 import logging
 
+import re
+
+def get_workdirs_from_dockerfile(file_path):
+    workdirs = []
+    with open(file_path, 'r') as dockerfile:
+        for line in dockerfile:
+            # Check for lines that contain the WORKDIR directive
+            match = re.match(r"^\s*WORKDIR\s+(.+)", line, re.IGNORECASE)
+            if match:
+                # Extract the directory path
+                workdir = match.group(1).strip()
+                workdirs.append(workdir)
+    return workdirs
+
+impossible_workdirs = [
+    "/root", "/", "/runpod-volume", "/lib", 
+    "/opt", "/run", "/sbin", "/sys", "/var", 
+    "/bin", "/dev", "/home", "/lib32", "/media", 
+    "/proc", "/srv", "/tmp", "/workspace", "/boot", 
+    "/etc", "/kaniko", "/lib64", "/mnt"]
+
 def build_image(job):
     job_input = job["input"]
     dockerfile_path = job_input["dockerfile_path"]
@@ -78,6 +99,19 @@ def build_image(job):
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e) + error_msg
         return return_payload
+    except Exception as e:
+        return_payload["status"] = "failed"
+        return_payload["error_msg"] = str(e)
+        return return_payload
+    
+    try:
+        workdirs = get_workdirs_from_dockerfile(repoDir + "/" + dockerfile_path)
+        logging.info(f"Workdirs: {workdirs}")
+        for workdir in workdirs:
+            if workdir in impossible_workdirs:
+                return_payload["status"] = "failed"
+                return_payload["error_msg"] = f"Workdir {workdir} is not allowed. Please change the workdir in your Dockerfile."
+                return return_payload
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)

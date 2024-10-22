@@ -4,6 +4,7 @@ import os
 import requests
 import tarfile
 import io
+import logging
 
 def build_image(job):
     job_input = job["input"]
@@ -31,6 +32,7 @@ def build_image(job):
 
     envs = os.environ.copy()
 
+    logging.info(f"Downloading {github_repo} at {ref}")
     api_url = f"https://api.github.com/repos/{github_repo.split('/')[-2]}/{github_repo.split('/')[-1]}/tarball/{ref}"
     headers = {
         "Accept": "application/vnd.github+json",
@@ -45,6 +47,7 @@ def build_image(job):
         return_payload["error_msg"] = str(e)
         return return_payload
 
+    logging.info(f"Extracting {github_repo} at {ref}")
     temp_dir = f"/runpod-volume/{build_id}/temp"
     try:
         os.makedirs(temp_dir, exist_ok=True)
@@ -52,12 +55,13 @@ def build_image(job):
             tar.extractall(path=temp_dir)
         extracted_dir = next(os.walk(temp_dir))[1][0]
         install_command = "curl -fsSL https://bun.sh/install | bash"
-        result = subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, capture_output=True, env=envs)
+        subprocess.run(install_command, shell=True, executable="/bin/bash", check=True, capture_output=True, env=envs)
     except Exception as e:
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
         return return_payload
 
+    logging.info("Installing bun")
     bun_bin_dir = os.path.expanduser("~/.bun/bin")
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
     repoDir = "/runpod-volume/{}/temp/{}".format(build_id, extracted_dir)
@@ -68,6 +72,7 @@ def build_image(job):
         return_payload["error_msg"] = str(e)
         return return_payload
     
+    logging.info("Creating cache directory")
     try:
         subprocess.run("mkdir -p /runpod-volume/{}/cache".format(build_id), shell=True, env=envs, check=True)
     except Exception as e:
@@ -75,6 +80,7 @@ def build_image(job):
         return_payload["error_msg"] = str(e)
         return return_payload
 
+    logging.info("Building image")
     imageBuildPath = "/runpod-volume/{}/image.tar".format(build_id)
     try:
         subprocess.run([
@@ -96,7 +102,8 @@ def build_image(job):
         return_payload["status"] = "failed"
         return_payload["error_msg"] = str(e)
         return return_payload
-    
+
+    logging.info("Installing dependencies")
     envs["USERNAME_REGISTRY"] = username_registry
     envs["TAR_PATH"] = imageBuildPath
     envs["UUID"] = build_id
@@ -108,6 +115,7 @@ def build_image(job):
         return_payload["error_msg"] = str(e)
         return return_payload
 
+    logging.info("Pushing image to registry")
     run_command = "bun run index.ts {}".format(cloudflare_destination)
     try:
         subprocess.run(run_command, cwd="/kaniko/serverless-registry/push", env=envs, shell=True, check=True, executable="/bin/bash")
@@ -116,6 +124,7 @@ def build_image(job):
         return_payload["error_msg"] = str(e)
         return return_payload
     
+    logging.info(f"Cleaning up")
     try:
         subprocess.run("rm -rf /runpod-volume/{}".format(build_id), shell=True, env=envs, check=True)
     except Exception as e:

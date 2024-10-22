@@ -108,6 +108,7 @@ def build_image(job):
         workdirs = get_workdirs_from_dockerfile(repoDir + "/" + dockerfile_path)
         logging.info(f"Workdirs: {workdirs}")
         for workdir in workdirs:
+            workdir = workdir.strip().rstrip('\\')
             if workdir in impossible_workdirs:
                 return_payload["status"] = "failed"
                 return_payload["error_msg"] = f"Workdir {workdir} is not allowed. Please change the workdir in your Dockerfile."

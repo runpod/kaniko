@@ -21,6 +21,7 @@ def build_image(job):
     refresh_worker_flag = True
     if refresh_worker == "false":
         refresh_worker_flag = False
+    print(job_input)
 
     return_payload = {
         "refresh_worker": refresh_worker_flag,

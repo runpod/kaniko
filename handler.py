@@ -144,7 +144,7 @@ def build_image(job):
             # "--cache-dir={}".format(f"/kaniko/{build_id}/cache"),
             # "--single-snapshot",
             "--no-push", "--tar-path={}".format(imageBuildPath)
-        ], check=True, env=envs, executable="/bin/bash")
+        ], check=True, env=envs)
     except subprocess.CalledProcessError as e:
         error_msg = str(e.stderr)
         return_payload["status"] = "failed"

@@ -70,7 +70,7 @@ def build_image(job):
         return return_payload
 
     logging.info(f"Extracting {github_repo} at {ref}")
-    temp_dir = f"/runpod-volume/{build_id}/temp"
+    temp_dir = f"/kaniko/{build_id}/temp"
     try:
         os.makedirs(temp_dir, exist_ok=True)
         with tarfile.open(fileobj=io.BytesIO(response.content), mode="r:gz") as tar:
@@ -91,9 +91,9 @@ def build_image(job):
     logging.info("Installing bun")
     bun_bin_dir = os.path.expanduser("~/.bun/bin")
     envs["PATH"] = f"{bun_bin_dir}:{envs['PATH']}"
-    repoDir = "/runpod-volume/{}/temp/{}".format(build_id, extracted_dir)
+    repoDir = "/kaniko/{}/temp/{}".format(build_id, extracted_dir)
     try:
-        subprocess.run("mkdir -p /runpod-volume/{}".format(build_id), shell=True, env=envs, check=True)
+        subprocess.run("mkdir -p /kaniko/{}".format(build_id), shell=True, env=envs, check=True)
     except subprocess.CalledProcessError as e:
         error_msg = str(e.stderr)
         return_payload["status"] = "failed"
@@ -121,7 +121,7 @@ def build_image(job):
     
     logging.info("Creating cache directory")
     try:
-        subprocess.run("mkdir -p /runpod-volume/{}/cache".format(build_id), shell=True, env=envs, check=True)
+        subprocess.run("mkdir -p /kaniko/{}/cache".format(build_id), shell=True, env=envs, check=True)
     except subprocess.CalledProcessError as e:
         error_msg = str(e.stderr)
         return_payload["status"] = "failed"
@@ -133,7 +133,7 @@ def build_image(job):
         return return_payload
 
     logging.info("Building image")
-    imageBuildPath = "/runpod-volume/{}/image.tar".format(build_id)
+    imageBuildPath = "/kaniko/{}/image.tar".format(build_id)
     try:
         subprocess.run([
             "/kaniko/executor", 
@@ -141,7 +141,7 @@ def build_image(job):
             "--dockerfile={}".format(dockerfile_path), 
             "--destination={}".format(cloudflare_destination), 
             # "--cache=true",
-            # "--cache-dir={}".format(f"/runpod-volume/{build_id}/cache"),
+            # "--cache-dir={}".format(f"/kaniko/{build_id}/cache"),
             # "--single-snapshot",
             "--no-push", "--tar-path={}".format(imageBuildPath)
         ], check=True, env=envs)
@@ -190,7 +190,7 @@ def build_image(job):
     
     logging.info(f"Cleaning up")
     try:
-        subprocess.run("rm -rf /runpod-volume/{}".format(build_id), shell=True, env=envs, check=True)
+        subprocess.run("rm -rf /kaniko/{}".format(build_id), shell=True, env=envs, check=True)
     except subprocess.CalledProcessError as e:
         error_msg = str(e.stderr)
         return_payload["status"] = "failed"

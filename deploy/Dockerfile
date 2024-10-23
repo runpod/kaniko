@@ -106,7 +106,8 @@ COPY --from=builder /src/requirements.txt /kaniko/requirements.txt
 COPY --from=builder /src/handler.py /kaniko/handler.py
 COPY --from=builder /src/serverless-registry /kaniko/serverless-registry
 
-RUN apt-get update
+RUN sudo apt-get update
+RUN sudo apt-get install --reinstall dbus
 RUN pip install -r /kaniko/requirements.txt
 RUN wget -qO- https://get.pnpm.io/install.sh | sh -
 RUN apt update

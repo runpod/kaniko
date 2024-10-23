@@ -99,7 +99,7 @@ WORKDIR /workspace
 
 # ENTRYPOINT ["/kaniko/executor"]
 
-FROM runpod/pytorch:2.1.1-py3.10-cuda12.1.1-devel-ubuntu22.04 AS python-debug
+FROM runpod/pytorch:1.13.0-py3.10-cuda11.7.1-devel-ubuntu22.04 AS python-debug
 
 COPY --from=builder /src/out/executor /kaniko/executor
 COPY --from=builder /src/requirements.txt /kaniko/requirements.txt
@@ -107,7 +107,6 @@ COPY --from=builder /src/handler.py /kaniko/handler.py
 COPY --from=builder /src/serverless-registry /kaniko/serverless-registry
 
 RUN apt-get update
-RUN apt-get install --reinstall dbus
 RUN pip install -r /kaniko/requirements.txt
 RUN wget -qO- https://get.pnpm.io/install.sh | sh -
 RUN apt update

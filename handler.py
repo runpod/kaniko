@@ -142,7 +142,7 @@ def build_image(job):
             "--destination={}".format(cloudflare_destination), 
             # "--cache=true",
             # "--cache-dir={}".format(f"/runpod-volume/{build_id}/cache"),
-            "--single-snapshot",
+            # "--single-snapshot",
             "--no-push", "--tar-path={}".format(imageBuildPath)
         ], check=True, env=envs)
     except subprocess.CalledProcessError as e:

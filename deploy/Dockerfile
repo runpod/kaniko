@@ -99,7 +99,7 @@ WORKDIR /workspace
 
 # ENTRYPOINT ["/kaniko/executor"]
 
-FROM ubuntu/python:3.12-24.04_stable AS python-debug
+FROM ubuntu:24.04 AS python-debug
 
 COPY --from=builder /src/out/executor /kaniko/executor
 COPY --from=builder /src/requirements.txt /kaniko/requirements.txt
@@ -107,8 +107,7 @@ COPY --from=builder /src/handler.py /kaniko/handler.py
 COPY --from=builder /src/serverless-registry /kaniko/serverless-registry
 
 RUN apt update
-RUN apt install -y python3-pip
-
+RUN apt install -y python3-pip python3 python3-venv curl unzip
 
 RUN pip install -r /kaniko/requirements.txt
 RUN wget -qO- https://get.pnpm.io/install.sh | sh -
